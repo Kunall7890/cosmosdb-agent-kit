@@ -1,0 +1,22 @@
+[package]
+name = "ecommerce-order-api"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "ecommerce-order-api"
+path = "src/main.rs"
+
+[dependencies]
+axum = "0.7"
+tokio = { version = "1", features = ["full"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+uuid = { version = "1", features = ["v4"] }
+chrono = { version = "0.4", features = ["serde"] }
+reqwest = { version = "0.12", default-features = false, features = ["json", "native-tls"] }
+hmac = "0.12"
+sha2 = "0.10"
+base64 = "0.22"
+tower-http = { version = "0.5", features = ["cors"] }
+urlencoding = "2"

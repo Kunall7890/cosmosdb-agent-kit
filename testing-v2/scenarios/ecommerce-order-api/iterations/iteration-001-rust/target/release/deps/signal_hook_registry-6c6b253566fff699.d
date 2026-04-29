@@ -1,0 +1,9 @@
+/home/runner/work/cosmosdb-agent-kit/cosmosdb-agent-kit/testing-v2/scenarios/ecommerce-order-api/iterations/iteration-001-rust/target/release/deps/signal_hook_registry-6c6b253566fff699.d: /home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signal-hook-registry-1.4.8/src/lib.rs /home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signal-hook-registry-1.4.8/src/half_lock.rs /home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signal-hook-registry-1.4.8/src/vec_map.rs
+
+/home/runner/work/cosmosdb-agent-kit/cosmosdb-agent-kit/testing-v2/scenarios/ecommerce-order-api/iterations/iteration-001-rust/target/release/deps/libsignal_hook_registry-6c6b253566fff699.rlib: /home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signal-hook-registry-1.4.8/src/lib.rs /home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signal-hook-registry-1.4.8/src/half_lock.rs /home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signal-hook-registry-1.4.8/src/vec_map.rs
+
+/home/runner/work/cosmosdb-agent-kit/cosmosdb-agent-kit/testing-v2/scenarios/ecommerce-order-api/iterations/iteration-001-rust/target/release/deps/libsignal_hook_registry-6c6b253566fff699.rmeta: /home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signal-hook-registry-1.4.8/src/lib.rs /home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signal-hook-registry-1.4.8/src/half_lock.rs /home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signal-hook-registry-1.4.8/src/vec_map.rs
+
+/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signal-hook-registry-1.4.8/src/lib.rs:
+/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signal-hook-registry-1.4.8/src/half_lock.rs:
+/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signal-hook-registry-1.4.8/src/vec_map.rs:
