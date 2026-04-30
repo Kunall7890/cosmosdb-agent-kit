@@ -17,11 +17,11 @@
 |---------|--------|--------------|
 | Singleton CosmosClient | Detected | `sdk-singleton-client` |
 | Direct connection mode | Not detected | `sdk-connection-mode` |
-| Gateway connection mode | Detected | `sdk-connection-mode` |
+| Gateway connection mode | Not detected | `sdk-connection-mode` |
 | Partition key configured | Detected | `partition-high-cardinality` |
 | Bulk operations | Not detected | `sdk-bulk-operations` |
 | ETag optimistic concurrency | Not detected | `sdk-etag-concurrency` |
-| Point reads (by ID + partition key) | Detected | `query-avoid-scans` |
+| Point reads (by ID + partition key) | Not detected | `query-avoid-scans` |
 | Cross-partition queries | Detected | `query-avoid-cross-partition` |
 | Custom indexing policy | Not detected | `index-exclude-unused` |
 | Throughput configuration | Not detected | `throughput-provision-rus` |
@@ -63,7 +63,7 @@ assert 'pending' == 'delivered'
 
 ## Source Files
 
-Source code archived in `source-code.zip` (1079 files).
+Source code archived in `source-code.zip` (1524 files).
 
 ## Build & Startup Signals
 
