@@ -2951,6 +2951,37 @@ Benefits:
 - Performance: Query plan caching and reuse
 - Maintainability: Cleaner, type-safe code
 
+**Rust (`azure_data_cosmos`):**
+
+```rust
+use azure_data_cosmos::Query;
+
+// ✅ Parameterized query — safe and cacheable
+let query = Query::from("SELECT * FROM c WHERE c.customerId = @customerId")
+    .with_parameter("@customerId", customer_id)
+    .unwrap();
+
+// Multiple parameters
+let query = Query::from(
+    "SELECT * FROM c WHERE c.customerId = @cid AND c.status = @status ORDER BY c.createdAt DESC"
+)
+    .with_parameter("@cid", customer_id).unwrap()
+    .with_parameter("@status", "active").unwrap();
+
+// Aggregate query with parameters
+let query = Query::from(
+    "SELECT COUNT(1) AS totalOrders, SUM(c.total) AS totalSpent FROM c WHERE c.customerId = @cid"
+)
+    .with_parameter("@cid", customer_id).unwrap();
+```
+
+```rust
+// ❌ Anti-pattern: String interpolation (no plan caching, injection risk)
+let query = Query::from(format!(
+    "SELECT * FROM c WHERE c.customerId = '{}'", customer_id
+));
+```
+
 Reference: [Parameterized queries](https://learn.microsoft.com/azure/cosmos-db/nosql/query/parameterized-queries)
 
 ### 3.9 Use Point Reads Instead of Queries for Known ID and Partition Key
@@ -3033,6 +3064,25 @@ return response.getItem();
 // ✅ Point read in Node.js — 1 RU, no query engine overhead
 const { resource: order } = await container.item(orderId, userId).read<Order>();
 return order ?? null;
+```
+
+```rust
+// ✅ Point read in Rust (azure_data_cosmos) — 1 RU, no query engine
+use azure_data_cosmos::PartitionKey;
+
+let container = cosmos.database_client("db").container_client("orders").await;
+let pk = PartitionKey::from(customer_id.to_string());
+let response = container.read_item::<serde_json::Value>(pk, &order_id, None).await;
+match response {
+    Ok(item) => {
+        let order: Order = serde_json::from_value(item.into_body()).unwrap();
+        // Cost: 1 RU for a 1 KB document
+    }
+    Err(e) if e.http_status() == Some(azure_core::http::StatusCode::NotFound) => {
+        // Document not found
+    }
+    Err(e) => return Err(e),
+}
 ```
 
 ### Multiple Known Documents — ReadMany vs. Parallel Point Reads
@@ -4352,6 +4402,50 @@ System.setProperty("COSMOS.EMULATOR_SSL_TRUST_ALL", "true");  // INEFFECTIVE!
 - The emulator's well-known key is: `C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==`
 - For production, switch back to Direct mode and use your actual Cosmos DB endpoint
 
+---
+
+### Rust SDK (`azure_data_cosmos`)
+
+The Rust SDK provides a built-in method to accept the emulator's self-signed certificate:
+
+```rust
+use azure_data_cosmos::{
+    CosmosAccountEndpoint, CosmosAccountReference, CosmosClient, CosmosClientBuilder,
+};
+use azure_core::credentials::Secret;
+
+// ✅ Emulator configuration — accepts invalid certificates
+let endpoint: CosmosAccountEndpoint = "https://localhost:8081"
+    .parse()
+    .expect("valid endpoint");
+
+let account = CosmosAccountReference::with_master_key(
+    endpoint,
+    Secret::from("C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==".to_string()),
+);
+
+let client = CosmosClientBuilder::new()
+    .with_allow_emulator_invalid_certificates(true)  // Accept self-signed cert
+    .build(account)
+    .await
+    .expect("build client");
+
+// For production, omit with_allow_emulator_invalid_certificates:
+// CosmosClientBuilder::new().build(account).await
+```
+
+**Required Cargo.toml features:**
+```toml
+[dependencies]
+azure_data_cosmos = { version = "0.31", features = ["key_auth", "hmac_rust", "allow_invalid_certificates"] }
+azure_core = "0.32"
+```
+
+> **Note:** The `allow_invalid_certificates` feature must be enabled in Cargo.toml for
+> `with_allow_emulator_invalid_certificates(true)` to compile.
+
+---
+
 Reference: [Use the Azure Cosmos DB Emulator for local development](https://learn.microsoft.com/azure/cosmos-db/emulator)
 
 ### 4.9 Use ETags for optimistic concurrency on read-modify-write operations
@@ -4497,6 +4591,44 @@ except CosmosHttpResponseError as e:
 - **Always use** when updating denormalized data (see below)
 - **Skip** for append-only operations (new document creation with unique IDs)
 - **Skip** for idempotent overwrites where last-writer-wins is acceptable
+
+**Rust (`azure_data_cosmos`) equivalent:**
+
+```rust
+use azure_data_cosmos::{ItemOptions, PartitionKey};
+use azure_core::http::StatusCode;
+
+// Read document and capture ETag from response headers
+let container = cosmos.database_client("db").container_client("orders").await;
+let pk = PartitionKey::from(customer_id.to_string());
+
+// Read the current document
+let response = container.read_item::<serde_json::Value>(pk.clone(), &order_id, None)
+    .await
+    .map_err(|e| format!("read failed: {}", e))?;
+
+let etag = response.etag().map(|e| e.to_string());
+let mut order: Order = serde_json::from_value(response.into_body())?;
+
+// Modify the document
+order.status = "shipped".to_string();
+
+// Write with ETag condition — fails if document changed since read
+// Note: Pass the ETag as an If-Match header for conditional writes.
+// The azure_data_cosmos SDK (v0.31+) supports this via ItemOptions;
+// check your SDK version for the exact method name.
+let options = ItemOptions::default();
+// options = options.with_if_match_etag(etag.unwrap());
+
+let item = serde_json::to_value(&order)?;
+match container.replace_item(pk, &order.id, item, Some(options)).await {
+    Ok(_) => { /* Success */ }
+    Err(e) if e.http_status() == Some(StatusCode::PreconditionFailed) => {
+        // HTTP 412: Document was modified — retry from read
+    }
+    Err(e) => return Err(e.into()),
+}
+```
 
 ### ⚠️ Critical: ETags for Denormalized Data Updates
 
@@ -6471,6 +6603,48 @@ public class CosmosDbHostedService : IHostedService
 }
 ```
 
+```rust
+// Rust (azure_data_cosmos): Singleton via Arc shared across async handlers
+use azure_data_cosmos::{
+    CosmosAccountEndpoint, CosmosAccountReference, CosmosClient, CosmosClientBuilder,
+};
+use azure_core::credentials::Secret;
+use std::sync::Arc;
+
+pub type SharedCosmos = Arc<CosmosClient>;
+
+async fn create_singleton_client(endpoint: &str, key: &str) -> SharedCosmos {
+    let endpoint: CosmosAccountEndpoint = endpoint.parse().expect("valid endpoint");
+    let account = CosmosAccountReference::with_master_key(
+        endpoint,
+        Secret::from(key.to_string()),
+    );
+    let client = CosmosClientBuilder::new()
+        .build(account)
+        .await
+        .expect("build client");
+    Arc::new(client)
+}
+
+// Share the Arc<CosmosClient> via Axum state
+#[tokio::main]
+async fn main() {
+    let cosmos = create_singleton_client("https://...", "key...").await;
+    let app = axum::Router::new()
+        .route("/orders", axum::routing::get(list_orders))
+        .with_state(cosmos); // Single client reused by all handlers
+    // ...
+}
+
+async fn list_orders(
+    axum::extract::State(cosmos): axum::extract::State<SharedCosmos>,
+) -> impl axum::response::IntoResponse {
+    let container = cosmos.database_client("db").container_client("orders").await;
+    // Use container...
+    axum::http::StatusCode::OK
+}
+```
+
 Reference: [CosmosClient best practices](https://learn.microsoft.com/azure/cosmos-db/nosql/best-practice-dotnet)
 
 ### 4.28 Annotate entities for Spring Data Cosmos with @Container, @PartitionKey, and String IDs
@@ -6935,6 +7109,39 @@ List<CompositePath> assigneeSort = Arrays.asList(
 );
 
 policy.setCompositeIndexes(Arrays.asList(statusSort, assigneeSort));
+```
+
+```rust
+// Rust (azure_data_cosmos): Composite indexes via JSON deserialization
+// CompositeIndex types cannot be constructed directly (marked non_exhaustive),
+// so use JSON deserialization instead
+use azure_data_cosmos::models::{ContainerProperties, IndexingPolicy, PartitionKeyDefinition};
+
+let indexing_policy: IndexingPolicy = serde_json::from_value(serde_json::json!({
+    "automatic": true,
+    "indexingMode": "consistent",
+    "includedPaths": [{"path": "/*"}],
+    "excludedPaths": [{"path": "/_etag/?"}],
+    "compositeIndexes": [
+        [
+            {"path": "/status", "order": "ascending"},
+            {"path": "/createdAt", "order": "descending"}
+        ],
+        [
+            {"path": "/customerId", "order": "ascending"},
+            {"path": "/createdAt", "order": "descending"}
+        ]
+    ]
+})).expect("valid indexing policy JSON");
+
+let properties = ContainerProperties::new(
+    "orders".to_string(),
+    PartitionKeyDefinition::new(vec!["/customerId".to_string()]),
+)
+.with_indexing_policy(indexing_policy);
+
+// Create container with composite indexes
+db_client.create_container(properties, None).await?;
 ```
 
 **Why type discriminators need composite indexes:**
