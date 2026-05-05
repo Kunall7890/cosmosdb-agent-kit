@@ -33,18 +33,49 @@ jobs:
     outputs:
       should_run: ${{ steps.check.outputs.should_run }}
     steps:
-      - name: Check latest commit message
+      - name: Check latest commit message and iteration config
         id: check
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+          PR_NUM="${{ github.event.pull_request.number }}"
           MSG=$(gh api "repos/${{ github.repository }}/commits/${HEAD_SHA}" --jq '.commit.message' 2>/dev/null || echo "")
           echo "Latest commit: $MSG"
           if echo "$MSG" | grep -qi '\[skip ci\]'; then
             echo "Commit contains [skip ci] — skipping tests"
             echo "should_run=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Check if iteration-config.yaml exists on the PR branch.
+          # If it doesn't (e.g., iteration is archived with source-code.zip),
+          # there's nothing to test — skip CI.
+          ITER_PATH=$(gh api "repos/${{ github.repository }}/pulls/${PR_NUM}/files" \
+            --jq '.[].filename' \
+            | grep '^testing-v2/scenarios/.*/iterations/iteration-' \
+            | head -1)
+
+          if [ -z "$ITER_PATH" ]; then
+            echo "No iteration files in PR — skipping"
+            echo "should_run=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          ITER_DIR=$(echo "$ITER_PATH" | cut -d'/' -f1-5)
+          CONFIG_PATH="${ITER_DIR}/iteration-config.yaml"
+          HEAD_REF="${{ github.event.pull_request.head.ref }}"
+          HEAD_REPO="${{ github.event.pull_request.head.repo.full_name }}"
+
+          # Check if iteration-config.yaml exists at the PR head
+          STATUS=$(gh api "repos/${HEAD_REPO}/contents/${CONFIG_PATH}?ref=${HEAD_REF}" \
+            --jq '.name' 2>/dev/null || echo "")
+
+          if [ -z "$STATUS" ]; then
+            echo "iteration-config.yaml not found at ${CONFIG_PATH} — archived iteration, skipping tests"
+            echo "should_run=false" >> "$GITHUB_OUTPUT"
           else
+            echo "iteration-config.yaml exists — running tests"
             echo "should_run=true" >> "$GITHUB_OUTPUT"
           fi
 
