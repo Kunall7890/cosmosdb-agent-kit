@@ -672,7 +672,7 @@ Key constraints:
 
 See also: `partition-synthetic-keys` for synthetic-key construction patterns.
 
-Reference: [Azure Cosmos DB service quotas - Per-item limits](https://learn.microsoft.com/azure/cosmos-db/concepts-limits#per-item-limits) | [Access control on Cosmos DB resources](https://learn.microsoft.com/en-us/rest/api/cosmos-db/access-control-on-cosmosdb-resources)
+Reference: [Azure Cosmos DB service quotas - Per-item limits](https://learn.microsoft.com/azure/cosmos-db/concepts-limits#per-item-limits) | [Access control on Cosmos DB resources](https://learn.microsoft.com/rest/api/cosmos-db/access-control-on-cosmosdb-resources)
 
 ### 1.5 Handle JSON serialization correctly for Cosmos DB documents
 
