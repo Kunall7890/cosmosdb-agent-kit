@@ -6629,6 +6629,35 @@ public class CosmosDbHostedService : IHostedService
 }
 ```
 
+**`CosmosClient` is synchronously disposable only (.NET).** `CosmosClient` implements `IDisposable`, **not** `IAsyncDisposable`. There is no `DisposeAsync()` method. Any wrapper or context type that holds a `CosmosClient` must implement `IDisposable` and call `Dispose()` — never `IAsyncDisposable` / `DisposeAsync()`.
+
+**Incorrect (IAsyncDisposable — causes CS1061):**
+
+```csharp
+// WRONG: CosmosClient does not implement IAsyncDisposable
+public sealed class CosmosDbContext : IAsyncDisposable
+{
+    private readonly CosmosClient _client;
+    public CosmosDbContext(string connectionString)
+        => _client = new CosmosClient(connectionString);
+    // CS1061: 'CosmosClient' does not contain a definition for 'DisposeAsync'
+    public ValueTask DisposeAsync() => _client.DisposeAsync();
+}
+```
+
+**Correct (IDisposable):**
+
+```csharp
+// RIGHT: Use IDisposable — CosmosClient.Dispose() exists
+public sealed class CosmosDbContext : IDisposable
+{
+    private readonly CosmosClient _client;
+    public CosmosDbContext(string connectionString)
+        => _client = new CosmosClient(connectionString);
+    public void Dispose() => _client.Dispose();
+}
+```
+
 ```rust
 // Rust (azure_data_cosmos): Singleton via Arc shared across async handlers
 use azure_data_cosmos::{
