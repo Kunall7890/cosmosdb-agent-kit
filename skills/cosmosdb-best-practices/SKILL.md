@@ -109,6 +109,7 @@ Reference these guidelines when:
 - [sdk-java-cosmos-config](rules/sdk-java-cosmos-config.md) - Configure Cosmos DB initialization correctly in Spring Boot
 - [sdk-java-spring-boot-versions](rules/sdk-java-spring-boot-versions.md) - Match Java version to Spring Boot requirements
 - [sdk-local-dev-config](rules/sdk-local-dev-config.md) - Configure local development to avoid cloud conflicts
+- [sdk-dotnet-cosmos-package-id](rules/sdk-dotnet-cosmos-package-id.md) - Use `Microsoft.Azure.Cosmos`, not the abandoned `Azure.Cosmos` v4-preview package
 - [sdk-newtonsoft-dependency](rules/sdk-newtonsoft-dependency.md) - Explicitly reference Newtonsoft.Json package
 - [sdk-python-async-deps](rules/sdk-python-async-deps.md) - Include aiohttp when using Python async SDK
 - [sdk-spring-data-annotations](rules/sdk-spring-data-annotations.md) - Annotate entities for Spring Data Cosmos
