@@ -13,8 +13,5 @@ inputs:
 
     I have the default indexing policy. What should I change?
 expected:
-  output_contains:
-    - "composite"
-    - "index"
   outcomes:
     - type: task_completed

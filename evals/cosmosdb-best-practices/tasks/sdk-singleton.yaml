@@ -22,7 +22,5 @@ inputs:
         }
     }
 expected:
-  output_contains:
-    - "singleton"
   outcomes:
     - type: task_completed

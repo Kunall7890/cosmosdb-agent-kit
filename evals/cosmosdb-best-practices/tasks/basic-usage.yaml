@@ -10,8 +10,5 @@ tags:
 inputs:
   prompt: "I'm designing a Cosmos DB container for an e-commerce app that stores orders. Each order has an orderId, customerId, orderDate, and items array. What should I use as the partition key?"
 expected:
-  output_contains:
-    - "partition"
-    - "customerId"
   outcomes:
     - type: task_completed

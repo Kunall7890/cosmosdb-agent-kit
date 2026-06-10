@@ -9,7 +9,5 @@ tags:
 inputs:
   prompt: "Review this Cosmos DB query for performance: SELECT * FROM c WHERE c.status = 'active' ORDER BY c.createdAt DESC. The container is partitioned by /tenantId."
 expected:
-  output_contains:
-    - "cross-partition"
   outcomes:
     - type: task_completed

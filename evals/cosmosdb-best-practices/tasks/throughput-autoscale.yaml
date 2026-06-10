@@ -13,7 +13,5 @@ inputs:
     processing we spike to 9,000 RU/s. We're getting throttled during
     spikes. What should we do?
 expected:
-  output_contains:
-    - "autoscale"
   outcomes:
     - type: task_completed

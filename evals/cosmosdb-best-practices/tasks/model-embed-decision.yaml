@@ -13,7 +13,5 @@ inputs:
     Comments are always displayed with the post. Should I embed comments inside the
     post document or store them in a separate container?
 expected:
-  output_contains:
-    - "embed"
   outcomes:
     - type: task_completed

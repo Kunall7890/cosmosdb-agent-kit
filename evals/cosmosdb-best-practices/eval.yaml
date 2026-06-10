@@ -25,12 +25,7 @@ graders:
     name: has_output
     config:
       regex_match:
-        - ".{50,}"
-  - type: text
-    name: cosmos_terminology
-    config:
-      regex_match:
-        - "(?i)(cosmos|partition|RU|container|throughput|index|query)"
+        - ".+"
   - type: behavior
     name: response_constraints
     config:

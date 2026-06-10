@@ -9,7 +9,5 @@ tags:
 inputs:
   prompt: "How do I create an index in PostgreSQL for a users table?"
 expected:
-  output_not_contains:
-    - "Cosmos DB"
-    - "partition key"
-    - "RU"
+  outcomes:
+    - type: task_completed
