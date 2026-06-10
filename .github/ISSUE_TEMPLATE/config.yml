@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: "💬 Ask a Question"
+    url: https://github.com/AzureCosmosDB/cosmosdb-agent-kit/discussions/categories/q-a
+    about: "Ask questions and get help from the community"
+  - name: "💡 Share an Idea"
+    url: https://github.com/AzureCosmosDB/cosmosdb-agent-kit/discussions/categories/ideas
+    about: "Suggest new skills, rule categories, or integrations"
+  - name: "🎉 Show & Tell"
+    url: https://github.com/AzureCosmosDB/cosmosdb-agent-kit/discussions/categories/show-and-tell
+    about: "Share how you're using the agent kit"

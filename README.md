@@ -1,5 +1,10 @@
 # cosmosdb-agent-kit
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![Good First Issues](https://img.shields.io/github/issues/AzureCosmosDB/cosmosdb-agent-kit/good-first-issue?color=7057ff&label=good%20first%20issues)](https://github.com/AzureCosmosDB/cosmosdb-agent-kit/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
+[![Discussions](https://img.shields.io/github/discussions/AzureCosmosDB/cosmosdb-agent-kit)](https://github.com/AzureCosmosDB/cosmosdb-agent-kit/discussions)
+
 A collection of skills for AI coding agents working with Azure Cosmos DB. Skills are packaged instructions and scripts that extend agent capabilities.
 
 ![agent-kit-cosmosdb (1)](https://github.com/user-attachments/assets/0a2c2e5f-62ee-4741-adda-9af790980761)
@@ -111,6 +116,21 @@ Works with Claude Code, Codex, Cursor, Gemini CLI, GitHub Copilot, and other Age
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
+
+**Looking for a way to help?** Check out our [good first issues](https://github.com/AzureCosmosDB/cosmosdb-agent-kit/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) or browse the [Discussions](https://github.com/AzureCosmosDB/cosmosdb-agent-kit/discussions) board to share ideas.
+
+## Contributors
+
+Thanks to everyone who has contributed rules, fixes, and ideas!
+
+<!-- ALL-CONTRIBUTORS-LIST:START -->
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+<!-- markdownlint-restore -->
+<!-- prettier-ignore-end -->
+<!-- ALL-CONTRIBUTORS-LIST:END -->
+
+Contributions of any kind welcome! See the [contributing guide](CONTRIBUTING.md) to get started.
 
 ## Changelog
 
