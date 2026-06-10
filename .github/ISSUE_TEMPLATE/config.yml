@@ -1,8 +1,14 @@
 blank_issues_enabled: false
 contact_links:
-  - name: Questions & Discussions
-    url: https://github.com/AzureCosmosDB/cosmosdb-agent-kit/discussions
-    about: Ask questions or start a discussion about the agent kit
+  - name: "💬 Ask a Question"
+    url: https://github.com/AzureCosmosDB/cosmosdb-agent-kit/discussions/categories/q-a
+    about: "Ask questions and get help from the community"
+  - name: "💡 Share an Idea"
+    url: https://github.com/AzureCosmosDB/cosmosdb-agent-kit/discussions/categories/ideas
+    about: "Suggest new skills, rule categories, or integrations"
+  - name: "🎉 Show & Tell"
+    url: https://github.com/AzureCosmosDB/cosmosdb-agent-kit/discussions/categories/show-and-tell
+    about: "Share how you're using the agent kit"
   - name: Azure Cosmos DB Documentation
     url: https://learn.microsoft.com/azure/cosmos-db/
     about: Official Azure Cosmos DB documentation

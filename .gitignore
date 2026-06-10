@@ -2,6 +2,11 @@ node_modules/
 .DS_Store
 *.log
 __pycache__/
+
+# Waza eval results and cache
+.waza-cache/
+results/
+
 # Testing iteration extracted source (keep only zips)
 testing/scenarios/**/iterations/**/ecommerce-order-api/
 testing/scenarios/**/iterations/**/target/
