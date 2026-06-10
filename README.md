@@ -132,6 +132,25 @@ Thanks to everyone who has contributed rules, fixes, and ideas!
 
 Contributions of any kind welcome! See the [contributing guide](CONTRIBUTING.md) to get started.
 
+## Evaluation with Waza
+
+This project uses [Waza](https://github.com/microsoft/waza) to evaluate skill quality — testing that the agent produces correct Cosmos DB guidance across data modeling, partitioning, queries, SDK usage, and throughput scenarios.
+
+```bash
+# Install waza
+irm https://raw.githubusercontent.com/microsoft/waza/main/install.ps1 | iex  # Windows
+curl -fsSL https://raw.githubusercontent.com/microsoft/waza/main/install.sh | bash  # macOS/Linux
+
+# Run evaluations (mock executor, no API key needed)
+waza run evals/cosmosdb-best-practices/eval.yaml -v
+
+# Check skill readiness
+waza check skills/cosmosdb-best-practices
+
+# Run with a real model (requires Copilot auth)
+waza run evals/cosmosdb-best-practices/eval.yaml --executor copilot-sdk --model claude-sonnet-4.6
+```
+
 ## Changelog
 
 See [CHANGELOG.md](CHANGELOG.md) for a dated history of updates to the agent kit, including the `cosmosdb-best-practices` skill and the testing framework. Each entry links to the PR that introduced the change.
