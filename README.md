@@ -40,6 +40,14 @@ Azure Cosmos DB performance optimization guidelines containing 111 rules across 
 
 ## Installation
 
+### APM (recommended — all harnesses at once)
+
+```bash
+apm install AzureCosmosDB/cosmosdb-agent-kit
+```
+
+Installs the skill across GitHub Copilot, Claude Code, Cursor, Codex, and Gemini in one command.
+
 ### Universal one-liner (all agents)
 
 ```bash
@@ -47,6 +55,25 @@ npx skills add AzureCosmosDB/cosmosdb-agent-kit
 ```
 
 This drops the skill catalog into whichever agent you're using.
+
+### GitHub Copilot CLI
+
+```
+/plugin marketplace add AzureCosmosDB/cosmosdb-agent-kit
+/plugin install cosmosdb@cosmosdb-agent-kit
+```
+
+### Claude Code
+
+```
+/plugin install cosmosdb@claude-plugins-official
+```
+
+### Gemini CLI
+
+```bash
+gemini extensions install https://github.com/AzureCosmosDB/cosmosdb-agent-kit
+```
 
 ### Per-agent plugin directories
 
@@ -115,7 +142,23 @@ Works with Claude Code, Codex, Cursor, Gemini CLI, GitHub Copilot, and other Age
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines, including how to write and run evaluation tests.
+
+## Evaluation
+
+This project uses [Waza](https://github.com/microsoft/waza) for skill evaluation. Run tests locally:
+
+```bash
+# Install waza (one-time)
+irm https://raw.githubusercontent.com/microsoft/waza/main/install.ps1 | iex   # Windows
+curl -fsSL https://raw.githubusercontent.com/microsoft/waza/main/install.sh | bash  # macOS/Linux
+
+# Run evaluations
+waza run evals/cosmosdb-best-practices/eval.yaml -v
+
+# Check skill readiness
+waza check skills/cosmosdb-best-practices
+```
 
 **Looking for a way to help?** Check out our [good first issues](https://github.com/AzureCosmosDB/cosmosdb-agent-kit/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) or browse the [Discussions](https://github.com/AzureCosmosDB/cosmosdb-agent-kit/discussions) board to share ideas.
 

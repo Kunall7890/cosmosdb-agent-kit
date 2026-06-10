@@ -1,35 +1,41 @@
 ---
 name: Bug Report
-about: Report an inaccurate rule, build failure, or unexpected agent behavior
-title: "[Bug] "
+about: Report incorrect guidance, broken rules, or agent misbehavior
+title: '[Bug] '
 labels: bug
 assignees: ''
 ---
 
-## Describe the Bug
+## Bug Description
 
-<!-- A clear description of what's wrong -->
-
-## Which rule or component is affected?
-
-<!-- e.g., query-avoid-cross-partition.md, build script, SKILL.md -->
-
-## Expected Behavior
-
-<!-- What should happen instead? -->
+<!-- What's wrong? Be specific about the incorrect behavior. -->
 
 ## Steps to Reproduce
 
-1. <!-- Install the skill using ... -->
-2. <!-- Ask the agent to ... -->
-3. <!-- Observe that ... -->
+1. Install the skill in agent: <!-- e.g., GitHub Copilot, Claude Code -->
+2. Ask: <!-- paste the exact prompt -->
+3. Observe: <!-- what the agent incorrectly says -->
 
-## Agent Environment
+## Expected Behavior
 
-- **Agent**: <!-- e.g., GitHub Copilot, Claude Code, Cursor, Gemini CLI -->
-- **Agent version**: <!-- if known -->
-- **Skill version**: <!-- from metadata.json or npx skills list -->
+<!-- What should the agent have said or done? -->
 
-## Additional Context
+## Actual Behavior
 
-<!-- Screenshots, logs, or links to relevant docs -->
+<!-- What did the agent actually say? Paste relevant output. -->
+
+## Environment
+
+- Agent: <!-- e.g., GitHub Copilot, Claude Code, Cursor -->
+- Skill version: <!-- check metadata.json -->
+- OS: <!-- Windows / macOS / Linux -->
+
+## Related Rule
+
+<!-- If this is about a specific rule, name it -->
+
+**Rule file:** `skills/cosmosdb-best-practices/rules/_____.md`
+
+## Suggested Fix
+
+<!-- Optional: how would you fix this? -->

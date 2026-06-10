@@ -14,6 +14,7 @@ Add new best practice rules to the existing `cosmosdb-best-practices` skill:
 3. Use the template at `skills/cosmosdb-best-practices/rules/_template.md`
 4. Include valid frontmatter with `title`, `impact`, and `tags`
 5. Run `npm run build` to compile rules into AGENTS.md
+6. **Add an evaluation task** (see [Writing Tests](#writing-tests) below)
 
 **Example rule file name:** `query-use-top-clause.md`
 
@@ -62,11 +63,86 @@ cd cosmosdb-agent-kit
 # Install dependencies
 npm install
 
+# Install waza (evaluation framework)
+# Windows:
+irm https://raw.githubusercontent.com/microsoft/waza/main/install.ps1 | iex
+# macOS/Linux:
+curl -fsSL https://raw.githubusercontent.com/microsoft/waza/main/install.sh | bash
+
 # Make changes to rules, then build
 npm run build
 
 # Validate your changes
 npm run validate
+
+# Run evaluation tests
+waza run evals/cosmosdb-best-practices/eval.yaml -v
+```
+
+## Writing Tests
+
+**All new rules and features must include evaluation tests.** PRs without tests will not be merged.
+
+### Adding a task for a new rule
+
+Create a YAML file in `evals/cosmosdb-best-practices/tasks/`:
+
+```yaml
+id: your-rule-name
+name: "Short descriptive name"
+description: |
+  What this test validates — should map to a specific rule or behavior.
+inputs:
+  prompt: "A realistic user prompt that should trigger your rule's guidance"
+expected:
+  outcomes:
+    - type: task_completed
+```
+
+### Task file conventions
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `id` | Yes | Unique kebab-case identifier matching the rule |
+| `name` | Yes | Human-readable test name |
+| `description` | Yes | What the test validates |
+| `inputs.prompt` | Yes | The prompt the agent receives |
+| `expected.outcomes` | Yes | At minimum `task_completed` |
+
+### Running tests locally
+
+```bash
+# Run all eval tasks (mock executor — no API key needed)
+waza run evals/cosmosdb-best-practices/eval.yaml -v
+
+# Run a single task by name
+waza run evals/cosmosdb-best-practices/eval.yaml --task "Your Task Name"
+
+# Check skill readiness
+waza check skills/cosmosdb-best-practices
+```
+
+### Example: adding a rule + test together
+
+1. Create the rule: `skills/cosmosdb-best-practices/rules/query-use-top-clause.md`
+2. Create the test: `evals/cosmosdb-best-practices/tasks/query-use-top-clause.yaml`
+
+```yaml
+id: query-use-top-clause
+name: "Query - Use TOP clause for pagination"
+description: |
+  Validates that the skill recommends TOP/OFFSET-LIMIT for bounded result sets.
+inputs:
+  prompt: "My Cosmos DB query returns thousands of documents but I only need the first 10. How should I limit the results?"
+expected:
+  outcomes:
+    - type: task_completed
+```
+
+3. Build and test:
+```bash
+npm run build
+waza run evals/cosmosdb-best-practices/eval.yaml --task "Query - Use TOP clause for pagination"
 ```
 
 ## Rule File Format
@@ -102,10 +178,22 @@ Show code or configuration examples when applicable.
 ## Pull Request Guidelines
 
 1. **One rule per PR** for new rules (makes review easier)
-2. **Run validation** before submitting: `npm run validate`
-3. **Run build** to regenerate AGENTS.md: `npm run build`
-4. **Write clear commit messages** describing the change
-5. **Link related issues** in the PR description
+2. **Include an evaluation task** for every new rule or behavior change
+3. **Run validation** before submitting: `npm run validate`
+4. **Run build** to regenerate AGENTS.md: `npm run build`
+5. **Run tests** to ensure nothing is broken: `waza run evals/cosmosdb-best-practices/eval.yaml`
+6. **Write clear commit messages** describing the change
+7. **Link related issues** in the PR description
+
+## PR Merge Requirements
+
+Your PR must pass these checks before merge:
+
+- [ ] `npm run validate` passes
+- [ ] `npm run build` regenerates AGENTS.md without errors
+- [ ] `waza run` evaluation passes (CI runs this automatically)
+- [ ] At least one eval task covers the new/changed behavior
+- [ ] One approving review from a code owner
 
 ## Code of Conduct
 

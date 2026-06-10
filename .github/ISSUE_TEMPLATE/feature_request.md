@@ -1,36 +1,31 @@
 ---
 name: Feature Request
-about: Suggest a new skill, rule category, or tooling improvement
-title: "[Feature] "
+about: Suggest an improvement or new capability for the agent kit
+title: '[Feature] '
 labels: enhancement
 assignees: ''
 ---
 
-## Summary
+## Feature Description
 
-<!-- One-sentence description of what you'd like -->
+<!-- What would you like to see added or improved? -->
 
 ## Motivation
 
-<!-- Why would this be valuable? What problem does it solve? -->
+<!-- Why is this useful? What problem does it solve? -->
 
 ## Proposed Solution
 
-<!-- How should this work? Include examples if possible -->
+<!-- How would you implement this? -->
 
 ## Alternatives Considered
 
-<!-- Any other approaches you've thought about -->
+<!-- Any other approaches you've thought about? -->
 
-## Which agents would benefit?
+## Acceptance Criteria
 
-- [ ] All agents
-- [ ] GitHub Copilot
-- [ ] Claude Code
-- [ ] Cursor
-- [ ] Gemini CLI
-- [ ] Other: <!-- specify -->
+<!-- How would we know this feature is complete? -->
 
-## Additional Context
-
-<!-- Links to docs, related issues, or screenshots -->
+- [ ] 
+- [ ] 
+- [ ] Includes evaluation task in `evals/` to validate the feature

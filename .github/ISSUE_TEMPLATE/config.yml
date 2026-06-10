@@ -9,3 +9,6 @@ contact_links:
   - name: "🎉 Show & Tell"
     url: https://github.com/AzureCosmosDB/cosmosdb-agent-kit/discussions/categories/show-and-tell
     about: "Share how you're using the agent kit"
+  - name: Azure Cosmos DB Documentation
+    url: https://learn.microsoft.com/azure/cosmos-db/
+    about: Official Azure Cosmos DB documentation
