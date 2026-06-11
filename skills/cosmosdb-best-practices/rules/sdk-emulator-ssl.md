@@ -86,6 +86,13 @@ const client = new CosmosClient({
 
 ### Java SDK (Detailed)
 
+> **Which emulator are you on?**
+> - **Windows desktop emulator** → follow this section.
+> - **Linux (vNext) emulator** (`...azure-cosmos-emulator:vnext-latest`, `--protocol https`) → see
+>   [Java SDK + Linux (vNext) Emulator over HTTPS](#java-sdk--linux-vnext-emulator-over-https) below.
+>   In addition to trusting the cert, the Linux emulator requires connecting via a **SAN-matching
+>   host** (`localhost`/`127.0.0.1`) and setting **`endpointDiscoveryEnabled(false)`** — details there.
+
 When using the Azure Cosmos DB Emulator with the Java SDK, you must import the emulator's self-signed SSL certificate into the JDK truststore and use Gateway connection mode. Direct mode has persistent SSL issues with the emulator.
 
 **Problem (SSL handshake failures):**
