@@ -9,8 +9,6 @@ This is the high-level log. For detailed per-iteration evaluation notes (test re
 
 ---
 
----
-
 ## 2026-06-11 — `sdk-emulator-ssl`: Java + Linux (vNext) emulator HTTPS guidance ([#192](https://github.com/AzureCosmosDB/cosmosdb-agent-kit/issues/192))
 
 - **Amended:** `sdk-emulator-ssl.md` — Added a "Java SDK + Linux (vNext) Emulator over HTTPS" section. Documents that importing the cert is necessary but not sufficient: Netty native OpenSSL (`netty-tcnative`) ignores the JDK `cacerts` and any trust-all `SSLContext`, and the Java SDK enforces strict TLS SAN hostname verification. Recommends the 4-step path (import cert → `-Dio.netty.handler.ssl.noOpenSsl=true` → SAN-matching host → `gatewayMode()` + `endpointDiscoveryEnabled(false)`), with the three error signatures and the `sdk-java-v4` doc link. Added `java`, `netty`, `truststore` tags.
