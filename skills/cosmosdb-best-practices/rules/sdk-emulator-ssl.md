@@ -2,7 +2,7 @@
 title: Configure SSL and connection mode for Cosmos DB Emulator
 impact: MEDIUM
 impactDescription: enables local development with all SDKs
-tags: sdk, emulator, ssl, local-development, certificate, gateway-mode
+tags: sdk, emulator, ssl, local-development, certificate, gateway-mode, java, netty, truststore
 ---
 
 ## Configure SSL and Connection Mode for Cosmos DB Emulator
@@ -209,6 +209,102 @@ System.setProperty("COSMOS.EMULATOR_SSL_TRUST_ALL", "true");  // INEFFECTIVE!
 - The custom truststore approach avoids needing administrator access
 - The emulator's well-known key is: `C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==`
 - For production, switch back to Direct mode and use your actual Cosmos DB endpoint
+
+---
+
+### Java SDK + Linux (vNext) Emulator over HTTPS
+
+The steps above target the **Windows desktop emulator**. The **Linux (vNext) emulator**
+(`mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator:vnext-latest`) run with
+`--protocol https` needs two additional things for the Java SDK, because the SDK transports
+over Reactor Netty. Importing the certificate is **necessary but not sufficient** on Linux.
+
+**Symptoms (three distinct failures):**
+
+```text
+# (a) Netty native OpenSSL (netty-tcnative) is active — it keeps its OWN trust
+#     material and ignores both the JDK cacerts AND any trust-all SSLContext:
+com.azure.cosmos.CosmosException: ... General OpenSslEngine problem
+
+# (b) Cert genuinely not trusted by the JDK SSL provider:
+javax.net.ssl.SSLHandshakeException: PKIX path building failed:
+  sun.security.provider.certpath.SunCertPathBuilderException:
+  unable to find valid certification path to requested target
+
+# (c) Cert trusted, but connecting via a host outside the cert SAN —
+#     the Java SDK enforces strict TLS hostname verification:
+javax.net.ssl.SSLPeerUnverifiedException:
+  No subject alternative DNS name matching <host> found. SANs in the cert: localhost, 127.0.0.1
+```
+
+**⚠️ A programmatic trust-all `SSLContext` does NOT work** — `netty-tcnative` (native OpenSSL)
+bypasses the JDK `SSLContext`, so an all-trusting `TrustManager` is silently ignored and the
+handshake still fails with `General OpenSslEngine problem`. Unlike the Go/Node/.NET/Python
+SDKs, the Java SDK has no direct "disable certificate validation" switch — you must follow the
+full path below.
+
+**Recommended pattern (4 steps):**
+
+**Step 1 — Export and import the emulator certificate into the JDK truststore:**
+
+```bash
+# Export the cert presented by the Linux emulator:
+openssl s_client -connect localhost:8081 -servername localhost </dev/null 2>/dev/null \
+  | openssl x509 -outform PEM > emulator.crt
+
+# Import it into the JDK truststore (cacerts):
+keytool -importcert -trustcacerts -alias cosmos-emulator \
+  -file emulator.crt -keystore "$JAVA_HOME/lib/security/cacerts" \
+  -storepass changeit -noprompt
+```
+
+**Step 2 — Put the SDK on the JDK SSL provider so the imported cert is honored.**
+This disables Netty's native OpenSSL so the JDK truststore (`cacerts`) is consulted:
+
+```bash
+# As a JVM system property:
+-Dio.netty.handler.ssl.noOpenSsl=true
+
+# Equivalently, exclude netty-tcnative-boringssl-static from the dependency tree.
+```
+
+**Step 3 — Connect via a host that is in the certificate SAN** (`localhost` or `127.0.0.1`).
+Any other host name (a container/service alias, for example) fails strict SAN verification:
+
+```bash
+COSMOS_ENDPOINT=https://localhost:8081
+```
+
+**Step 4 — Use Gateway mode, pin the endpoint, and disable endpoint discovery.**
+`endpointDiscoveryEnabled(false)` stops the SDK from following the advertised `127.0.0.1`
+loopback; do **not** rely on a trust-all `SSLContext`:
+
+```java
+CosmosClient client = new CosmosClientBuilder()
+    .endpoint(System.getenv("COSMOS_ENDPOINT"))   // https://localhost:8081 (SAN-matching host)
+    .key(System.getenv("COSMOS_KEY"))             // well-known emulator key
+    .gatewayMode()                                 // required for the emulator
+    .endpointDiscoveryEnabled(false)               // don't follow the advertised 127.0.0.1 loopback
+    .buildClient();
+```
+
+**Verify:**
+
+```bash
+# Without the JDK-SSL-provider switch -> fails with "General OpenSslEngine problem":
+mvn -q compile exec:java -Dexec.mainClass=com.example.Main
+
+# With the switch -> connects successfully over HTTPS:
+MAVEN_OPTS="-Dio.netty.handler.ssl.noOpenSsl=true" \
+  mvn -q compile exec:java -Dexec.mainClass=com.example.Main
+```
+
+**Key Points (Linux vNext + Java):**
+- `netty-tcnative` (native OpenSSL) ignores both the JDK `cacerts` and any trust-all `SSLContext` — set `-Dio.netty.handler.ssl.noOpenSsl=true` (or exclude `netty-tcnative-boringssl-static`) to force the JDK SSL provider.
+- The emulator's self-signed cert has SAN = `localhost, 127.0.0.1` only — connect via one of those hosts or strict TLS hostname verification fails.
+- Use `gatewayMode()` and `endpointDiscoveryEnabled(false)`; pin the endpoint to the SAN-matching host.
+
+Reference: [Azure Cosmos DB Java SDK v4](https://learn.microsoft.com/azure/cosmos-db/sdk-java-v4)
 
 ---
 
