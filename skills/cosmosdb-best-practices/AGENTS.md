@@ -43,14 +43,15 @@ Performance optimization and best practices guide for Azure Cosmos DB applicatio
    - 3.1 [Compute min/max/avg with one scoped aggregate query](#31-compute-min-max-avg-with-one-scoped-aggregate-query)
    - 3.2 [Minimize Cross-Partition Queries](#32-minimize-cross-partition-queries)
    - 3.3 [Avoid Full Container Scans](#33-avoid-full-container-scans)
-   - 3.4 [Query "latest" documents with explicit ORDER BY and TOP 1](#34-query-latest-documents-with-explicit-order-by-and-top-1)
-   - 3.5 [Detect and Redirect Analytical Queries Away from Transactional Containers](#35-detect-and-redirect-analytical-queries-away-from-transactional-containers)
-   - 3.6 [Order Filters by Selectivity](#36-order-filters-by-selectivity)
-   - 3.7 [Use Continuation Tokens for Pagination](#37-use-continuation-tokens-for-pagination)
-   - 3.8 [Use Parameterized Queries](#38-use-parameterized-queries)
-   - 3.9 [Use Point Reads Instead of Queries for Known ID and Partition Key](#39-use-point-reads-instead-of-queries-for-known-id-and-partition-key)
-   - 3.10 [Parameterize TOP Values Safely](#310-parameterize-top-values-safely)
-   - 3.11 [Project Only Needed Fields](#311-project-only-needed-fields)
+   - 3.4 [Use DISTINCT keyword to eliminate duplicate results efficiently](#34-use-distinct-keyword-to-eliminate-duplicate-results-efficiently)
+   - 3.5 [Query "latest" documents with explicit ORDER BY and TOP 1](#35-query-latest-documents-with-explicit-order-by-and-top-1)
+   - 3.6 [Detect and Redirect Analytical Queries Away from Transactional Containers](#36-detect-and-redirect-analytical-queries-away-from-transactional-containers)
+   - 3.7 [Order Filters by Selectivity](#37-order-filters-by-selectivity)
+   - 3.8 [Use Continuation Tokens for Pagination](#38-use-continuation-tokens-for-pagination)
+   - 3.9 [Use Parameterized Queries](#39-use-parameterized-queries)
+   - 3.10 [Use Point Reads Instead of Queries for Known ID and Partition Key](#310-use-point-reads-instead-of-queries-for-known-id-and-partition-key)
+   - 3.11 [Parameterize TOP Values Safely](#311-parameterize-top-values-safely)
+   - 3.12 [Project Only Needed Fields](#312-project-only-needed-fields)
 4. [SDK Best Practices](#4-sdk-best-practices) — **HIGH**
    - 4.1 [Use Async APIs for Better Throughput](#41-use-async-apis-for-better-throughput)
    - 4.2 [Configure Threshold-Based Availability Strategy (Hedging)](#42-configure-threshold-based-availability-strategy-hedging-)
@@ -2447,7 +2448,78 @@ Console.WriteLine($"Index Hit: {response.Diagnostics}");
 
 Reference: [Query optimization](https://learn.microsoft.com/azure/cosmos-db/nosql/query-metrics)
 
-### 3.4 Query "latest" documents with explicit ORDER BY and TOP 1
+### 3.4 Use DISTINCT keyword to eliminate duplicate results efficiently
+
+**Impact: MEDIUM** (reduces bandwidth usage and RU consumption by eliminating duplicate results at the query engine level)
+
+## Use DISTINCT keyword to eliminate duplicate results efficiently
+
+**Impact: MEDIUM (reduces unnecessary data transfer and RU consumption)**
+
+Azure Cosmos DB supports `SELECT DISTINCT` to eliminate duplicate values during query execution. Prefer using `DISTINCT` rather than retrieving all results and removing duplicates in application code, which increases network bandwidth, client-side processing, and RU consumption.
+
+`DISTINCT` is particularly useful when returning unique property values such as categories, tags, statuses, or identifiers.
+
+**Incorrect (client-side deduplication):**
+
+```csharp
+// Query returns duplicate category values
+var query = "SELECT c.category FROM c";
+
+var iterator = container.GetItemQueryIterator<dynamic>(query);
+
+var categories = new HashSet<string>();
+
+while (iterator.HasMoreResults)
+{
+    var response = await iterator.ReadNextAsync();
+
+    foreach (var item in response)
+    {
+        categories.Add(item.category.ToString());
+    }
+}
+
+// Duplicate elimination happens after all results
+// have already been transferred to the client
+```
+
+**Correct (using DISTINCT in Cosmos DB):**
+
+```csharp
+// Cosmos DB removes duplicates before returning results
+var query = "SELECT DISTINCT c.category FROM c";
+
+var iterator = container.GetItemQueryIterator<dynamic>(query);
+
+while (iterator.HasMoreResults)
+{
+    var response = await iterator.ReadNextAsync();
+
+    foreach (var item in response)
+    {
+        Console.WriteLine(item.category);
+    }
+}
+```
+
+**Correct (using DISTINCT VALUE for scalar results):**
+
+```sql
+SELECT DISTINCT VALUE c.category
+FROM c
+```
+
+### Additional considerations
+
+- `DISTINCT` queries rely on indexes for efficient execution; ensure projected fields are indexed.
+- `DISTINCT` queries across partitions still perform a fan-out query; prefer partition-scoped queries whenever possible to reduce RU consumption.
+- Use `DISTINCT VALUE` when returning a single scalar field to simplify the result shape.
+
+References:
+- https://learn.microsoft.com/azure/cosmos-db/nosql/query/keywords#distinct
+
+### 3.5 Query "latest" documents with explicit ORDER BY and TOP 1
 
 **Impact: HIGH** (prevents stale or nondeterministic "latest item" results)
 
@@ -2511,7 +2583,7 @@ If the query can span partitions, define the needed index policy for your filter
 
 Reference: [ORDER BY in Azure Cosmos DB for NoSQL](https://learn.microsoft.com/azure/cosmos-db/nosql/query/order-by) | [TOP keyword](https://learn.microsoft.com/azure/cosmos-db/nosql/query/keywords#top)
 
-### 3.5 Detect and Redirect Analytical Queries Away from Transactional Containers
+### 3.6 Detect and Redirect Analytical Queries Away from Transactional Containers
 
 **Impact: HIGH** (prevents RU starvation, 429 throttling cascades, and query timeouts)
 
@@ -2618,7 +2690,7 @@ References:
 - [Analytical store overview](https://learn.microsoft.com/azure/cosmos-db/analytical-store-introduction)
 - [Change Feed materialized views pattern](https://learn.microsoft.com/azure/cosmos-db/nosql/change-feed-design-patterns#materialized-views)
 
-### 3.6 Order Filters by Selectivity
+### 3.7 Order Filters by Selectivity
 
 **Impact: MEDIUM** (reduces intermediate result sets)
 
@@ -2693,7 +2765,7 @@ var query3 = "SELECT * FROM c WHERE c.status IN ('a', 'b') AND c.customerId = @i
 
 Reference: [Query optimization tips](https://learn.microsoft.com/azure/cosmos-db/nosql/performance-tips-query-sdk)
 
-### 3.7 Use Continuation Tokens for Pagination
+### 3.8 Use Continuation Tokens for Pagination
 
 **Impact: HIGH** (enables efficient large result sets)
 
@@ -2913,7 +2985,7 @@ public PagedResult<Task> getTasksByProject(
 
 Reference: [Pagination in Azure Cosmos DB](https://learn.microsoft.com/en-us/azure/cosmos-db/nosql/query/pagination)
 
-### 3.8 Use Parameterized Queries
+### 3.9 Use Parameterized Queries
 
 **Impact: MEDIUM** (improves security and query plan caching)
 
@@ -3032,7 +3104,7 @@ let query = Query::from(format!(
 
 Reference: [Parameterized queries](https://learn.microsoft.com/azure/cosmos-db/nosql/query/parameterized-queries)
 
-### 3.9 Use Point Reads Instead of Queries for Known ID and Partition Key
+### 3.10 Use Point Reads Instead of Queries for Known ID and Partition Key
 
 **Impact: HIGH** (1 RU vs ~2.5 RU per single-document lookup)
 
@@ -3249,7 +3321,7 @@ container.upsert_item({"id": event_id, "deviceId": device_id, "value": 42})
 
 Reference: [Point reads in Azure Cosmos DB](https://learn.microsoft.com/azure/cosmos-db/nosql/how-to-read-item) | [ReadMany — read multiple items](https://learn.microsoft.com/azure/cosmos-db/nosql/how-to-dotnet-read-item#read-multiple-items) | [Read many items fast (Java)](https://devblogs.microsoft.com/cosmosdb/read-many-items-fast-with-the-java-sdk-for-azure-cosmos-db/)
 
-### 3.10 Parameterize TOP Values Safely
+### 3.11 Parameterize TOP Values Safely
 
 **Impact: HIGH** (prevents incorrect query guidance and keeps parameterization secure)
 
@@ -3302,7 +3374,7 @@ References:
 - [Parameterized queries](https://learn.microsoft.com/azure/cosmos-db/nosql/query/parameterized-queries)
 - [SQL query TOP keyword](https://learn.microsoft.com/azure/cosmos-db/nosql/query/select#top-keyword)
 
-### 3.11 Project Only Needed Fields
+### 3.12 Project Only Needed Fields
 
 **Impact: HIGH** (reduces payload size, network bandwidth, and client memory; RU savings scale with document size (negligible on small flat docs, substantial on multi-KB/MB documents and large result sets))
 
