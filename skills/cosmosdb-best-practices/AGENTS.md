@@ -1,6 +1,6 @@
 # Azure Cosmos DB Best Practices
 
-**Version 1.0.0**  
+**Version 1.1.0**  
 CosmosDB Agent Kit  
 January 2026
 
@@ -7995,6 +7995,8 @@ The default indexing policy indexes every property but does **not** create compo
 
 > **Emulator warning:** The Cosmos DB emulator silently permits `ORDER BY` queries without a matching composite index and returns identical RU charges. Production containers reject the same query with *"The order by query does not have a corresponding composite index that it can be served from."* Always declare composite indexes at container-create time — do not rely on emulator success as validation.
 
+> ⚠️ **CreateContainerIfNotExists warning:** Defining a composite index in `CreateContainerIfNotExists` (or `createIfNotExists`) only applies the indexing policy when the container is created for the first time. If the container already exists, Cosmos DB returns the existing container, silently ignores the indexing policy argument, and keeps the existing indexing policy unchanged. To update composite indexes on an existing container, read the container, update its `IndexingPolicy`, and replace the container resource using the SDK's container replace operation. Always read the container back and verify that the expected composite indexes are present.
+
 **Incorrect (ORDER BY without composite index):**
 
 ```csharp
@@ -8293,6 +8295,8 @@ Exclude paths from indexing that you never query. Every indexed path adds write 
 }
 // Write cost includes indexing auditLog array - wasted RU
 ```
+
+> ⚠️ **CreateContainerIfNotExists warning:** Custom indexing policies supplied to `CreateContainerIfNotExists` (or `createIfNotExists`) are applied only when the container is created. If the container already exists, the call succeeds, the indexing policy argument is ignored, and the existing indexing policy remains unchanged. To apply new included or excluded paths to an existing container, update the container's `IndexingPolicy` and replace the container resource using the SDK's container replace operation. After deployment, read the container definition back and verify that the expected included and excluded paths are present.
 
 **Correct (exclude-all-first, then include back):**
 
