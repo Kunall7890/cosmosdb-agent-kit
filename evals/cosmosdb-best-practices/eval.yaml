@@ -26,16 +26,7 @@ graders:
     name: domain_terms
     description: Response must contain at least one Cosmos DB domain-specific term
     config:
-      match_any:
-        - "partition key"
-        - "RU/s"
-        - "request unit"
-        - "CosmosClient"
-        - "throughput"
-        - "indexing"
-        - "point read"
-        - "change feed"
-        - "TTL"
-        - "consistency level"
+      regex_match:
+        - "(?i)(partition key|RU/s|request unit|CosmosClient|throughput|indexing|point read|change feed|TTL|consistency level)"
 tasks:
   - "tasks/*.yaml"
